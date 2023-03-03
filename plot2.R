@@ -1,17 +1,35 @@
-power_data <- read.csv("household_power_consumption.txt", header = TRUE, sep = ';', 
-                       na.strings = "?", nrows = 2075259, check.names = FALSE, 
-                       stringsAsFactors = FALSE, comment.char = "", quote = '\"')
-
-# Select data for 1/2/2007 and 2/2/2007
-selected_data <- subset(power_data, Date %in% c("1/2/2007", "2/2/2007"))
-
-# Convert the date column to a date object and create a new datetime column
-selected_data$Date <- as.Date(selected_data$Date, format = "%d/%m/%Y")
-datetime <- paste(as.Date(selected_data$Date), selected_data$Time)
-selected_data$Datetime <- as.POSIXct(datetime)
-
-# Create a line plot of global active power against datetime
-with(selected_data, {
-  plot(Global_active_power ~ Datetime, type = "l",
-     ylab = "Global Active Power (kilowatts)", xlab = "")
-})
+plot2 <- function(){
+        ## Aim of this function is to 
+        ## 1. read the household_power_consumption.txt file
+        ## 2. subset for data taken from 2 days: 2007-02-01 and 2007-02-02
+        ## 3. generate a plot of global active power vs. time
+        
+        ## Parameters: none
+        ## Assumes household_power_consumption.txt file located in working dir
+        
+        ## read data
+        powerdata <- read.table("./household_power_consumption.txt", stringsAsFactors = FALSE, header = TRUE, sep =";"  )
+        
+        ## Create column in table with date and time merged together
+        FullTimeDate <- strptime(paste(powerdata$Date, powerdata$Time, sep=" "), "%d/%m/%Y %H:%M:%S")
+        powerdata <- cbind(powerdata, FullTimeDate)
+        
+        ## change class of all columns to correct class
+        powerdata$Date <- as.Date(powerdata$Date, format="%d/%m/%Y")
+        powerdata$Time <- format(powerdata$Time, format="%H:%M:%S")
+        powerdata$Global_active_power <- as.numeric(powerdata$Global_active_power)
+        powerdata$Global_reactive_power <- as.numeric(powerdata$Global_reactive_power)
+        powerdata$Voltage <- as.numeric(powerdata$Voltage)
+        powerdata$Global_intensity <- as.numeric(powerdata$Global_intensity)
+        powerdata$Sub_metering_1 <- as.numeric(powerdata$Sub_metering_1)
+        powerdata$Sub_metering_2 <- as.numeric(powerdata$Sub_metering_2)
+        powerdata$Sub_metering_3 <- as.numeric(powerdata$Sub_metering_3)
+        
+        ## subset data from 2007-02-01 and 2007-02-02
+        subsetdata <- subset(powerdata, Date == "2007-02-01" | Date =="2007-02-02")
+        
+        ## plot globalactivepower vs date&time
+        png("plot2.png", width=480, height=480)
+        with(subsetdata, plot(FullTimeDate, Global_active_power, type="l", xlab="Day", ylab="Global Active Power (kilowatts)"))
+        dev.off()
+}
